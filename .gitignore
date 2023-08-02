@@ -1,0 +1,6 @@
+*.zip
+testData/
+jsconfig.js
+node_modules/
+package-lock.json
+.idea/

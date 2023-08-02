@@ -1,0 +1,10 @@
+version: '3.4'
+
+services:
+  xray_console_client:
+    image: xray_console_client
+    container_name: "xray_console_client"
+
+    build:
+      context: ..
+      dockerfile: ./.docker/Dockerfile

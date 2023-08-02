@@ -1,0 +1,28 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - 
+      name: Checkout
+      uses: actions/checkout@v3.5.2
+    -
+      name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - 
+      name: Build and push Docker images
+      uses: docker/build-push-action@v4.0.0
+      with:
+        push: true
+        context: .
+        file: ./docker/Dockerfile 
+        tags: marca1234/xray-console-client:${{ github.run_id }} , marca1234/xray-console-client:latest
