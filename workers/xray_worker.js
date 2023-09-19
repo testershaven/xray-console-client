@@ -111,22 +111,28 @@ class XrayWorker {
             if(attributes.failures !== "0" || attributes.errors !== "0") {
                 failed = true;
 
-                let error = rawTest.error;
                 let failedTests = [];
                 if (rawTest.testcase != undefined) {
                     if (Array.isArray(rawTest.testcase)) {
                         rawTest.testcase.forEach( tc => {
                             if (tc.failure !== undefined) failedTests.push(tc);
                         })
-                    } else {
+                    } else if (rawTest.testcase.failure !== undefined){
                         failedTests.push(rawTest.testcase);
+                    } else {
+                        failedTests.push(rawTest)
                     }
                 }
 
-                if (error !== undefined) errors = error._cdata;
                 if (Array.isArray(failedTests) && failedTests.length > 0) {
                     failedTests.forEach(failedTest => {
-                        errors += `  | [[[ERROR]]] ${failedTest.failure._cdata.join(' , ')} |\n`
+                        if (failedTest.failure === undefined) {
+                            errors += `  | [[[ERROR]]] ${failedTest.error._cdata} |\n`
+
+                        } else {
+                            errors += `  | [[[ERROR]]] ${failedTest.failure._cdata.join(' , ')} |\n`
+                        }
+
                     })
                 }
             }
