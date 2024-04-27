@@ -205,7 +205,21 @@ class XrayWorker {
         rawTests.map(rawTest => {
             let expectedSteps = [];
             let actualSteps = [];
-            let labels = []
+            let labels = [];
+            let evidence = [];
+
+            for(const rawEvidence of rawTest.attachments) {
+                let data = fs.readFileSync(`${options.filePath}/${rawEvidence.source}`).toString('base64');
+
+                let actualEvidence = {
+                    data,
+                    filename: rawEvidence.name,
+                    contentType: rawEvidence.type
+                }
+
+                evidence.push(actualEvidence);
+            }
+
             for (const rawStep of rawTest.steps) {
                 let expectedStep = {
                     action: rawStep.name,
@@ -238,6 +252,7 @@ class XrayWorker {
                     steps: expectedSteps,
                     labels
                 },
+                evidence,
                 steps: actualSteps,
             };
 
