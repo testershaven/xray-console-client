@@ -22,6 +22,7 @@ const options = yargs
 .option("pn", { alias: "planKey", describe: "Plan Key", type: "string", demandOption: false }) 
 .option("s", { alias: "summary", describe: "Test Execution Summary", type: "string", demandOption: false }) 
 .option("d", { alias: "description", describe: "Test Execution Description", type: "string", demandOption: false })
+.option("rv", { alias: "releaseVersion", describe: "Release version which this test execution is linked", type: "string", demandOption: false })
 .option("ju", { alias: "jiraUrl", describe: "Jira Url in case you want to link executions to jira issues", type: "string", demandOption: false })
 .option("jbt", { alias: "jiraBasicToken", describe: "Jira Token (PAT) in case you want to link executions to jira issues", type: "string", demandOption: false })
 .option("i", { alias: "issueKey", describe: "Issue to be linked to executions (Youll need a Jira url and Jira token)", type: "string", demandOption: false }) 
@@ -40,6 +41,7 @@ Execution Key: ${options.executionKey} \n
 Summary: ${options.summary} \n
 Description: ${options.description} \n
 Environments: ${options.environments} \n
+Release version: ${options.releaseVersion} \n
 Jira Url: ${options.jiraUrl} \n
 Jira Basic Token: ************ \n
 Issue Key: ${options.issueKey}`);

@@ -281,6 +281,10 @@ class XrayWorker {
                 info['testEnvironments'] = options.environments.split(",");
             }
 
+            if (options.releaseVersion !== undefined) {
+                info['version'] = options.releaseVersion;
+            }
+
             response['info'] = info;
         }
 

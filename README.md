@@ -82,6 +82,7 @@ node executionUploader.js --tt $(testType) --f $(folder/file) --pk $(projectKey)
 | --ek              | --executionKey   | Execution key of execution to be updated instead of creating a new one                                | NO       |
 | --s               | --summary        | Test Execution Summary, in case new one is created, if none is passed , generic will be set           | NO       |
 | --d               | --description    | Test Execution Description, if none is passed , generic will be set                                   | NO       |
+| --rv              | --releaseVersion | Release version which this test execution is linked                                                   | NO       |
 | --i               | --issueKey       | Issue to be linked to executions (Youll need a Jira url and Jira token, only available for JIRA CLOUD | NO       |
 | --ju              | --jiraUrl        | Jira Url in case you want to link executions to jira issues                                           | NO       |
 | --jbt             | --jiraBasicToken | Jira Token (PAT) in case you want to link executions to jira issues                                   | NO       |
