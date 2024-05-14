@@ -4,7 +4,7 @@ const {JunitWorker} = require("./junit_worker");
 
 class XrayWorker {
     async generateXrayJsonFromCucumberJsonResults(options) {
-        console.log('Generate xray json from cucumber report');
+        console.log('Generate xray json from cucumber json results');
         let tcs = [];
         let executionJson = JSON.parse(fs.readFileSync(options.filePath).toString());
         executionJson.forEach(feature => {
@@ -68,7 +68,7 @@ class XrayWorker {
     }
 
     async generateXrayJsonFromSpecflowResults(options) {
-        console.log('Generate xray json from cucumber report');
+        console.log('Generate xray json from specflow results');
         let executionJson = JSON.parse(fs.readFileSync(options.filePath).toString());
 
         let testCases = [];
@@ -87,6 +87,7 @@ class XrayWorker {
     }
 
     async generateXrayJsonFromJunitXmlResults(options) {
+        console.log('Generate xray json from junit xml results');
         const junitWorker = new JunitWorker();
         let testSuite = await junitWorker.generateSuitesFromJunitXml(options.filePath);
 
@@ -140,7 +141,7 @@ class XrayWorker {
     }
 
     async generateXrayJsonFromAllureXmlResults(options) {
-
+        console.log('Generate xray json from allure xml results');
         const allureWorker = new AllureWorker();
         let testSuites = await allureWorker.generateSuitesFromAllureXml(options.filePath);
 
@@ -181,6 +182,7 @@ class XrayWorker {
     }
 
     async generateXrayRequestFromAllureJson(options) {
+        console.log('Generate xray json from allure json results');
         const allureWorker = new AllureWorker();
         let rawTests = await allureWorker.generateSuitesFromAllureJson(options.filePath);
 
@@ -257,7 +259,6 @@ class XrayWorker {
         if (actualSteps !== undefined) { xrayTestCase['steps'] = actualSteps };
         if (defects !== undefined) { xrayTestCase['defects'] = defects };
         if (evidence !== undefined) { xrayTestCase['evidence'] = evidence };
-        if (options.customFields !== undefined) { xrayTestCase['customFields'] = options.customFields };
 
         return xrayTestCase;
     }

@@ -1,13 +1,17 @@
-const axios = require('axios').default;
+const axios = require('axios');
 const {ClientError} = require("../errors/client_error");
+
+let instance;
 
 class XrayRestClient {
   constructor(host) {
-    axios.defaults.baseURL = host;
+    instance = axios.create({
+      baseURL: host,
+    });
   }
 
   async getAuthToken() {
-    return axios.defaults.headers.common['Authorization'];
+    return instance.defaults.headers.common['Authorization'];
   }
 
   async login(client_id, client_secret) {
@@ -15,11 +19,11 @@ class XrayRestClient {
     let config = { headers: {'Content-Type': 'application/json'} };
     let loginResponse;
     try {
-      loginResponse = (await axios.post(`/authenticate`, { client_id, client_secret }, config));
+      loginResponse = (await instance.post(`/authenticate`, { client_id, client_secret }, config));
     } catch (error) {
       throw new ClientError('Error Logging in to jira', error.message, error.response.status, error.response.statusText);   
     }
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + loginResponse.data;
+    instance.defaults.headers.common['Authorization'] = 'Bearer ' + loginResponse.data;
   }
 
   async sendCucumberTests(projectKey, file) {
@@ -35,7 +39,7 @@ class XrayRestClient {
 
     let path = `/import/feature?projectKey=${projectKey}`;
     try {
-      return await axios.post(path, formData, config);
+      return await instance.post(path, formData, config);
     } catch (error) {
       throw new ClientError('Error Sending Cucumber tests in to jira', error.message, error.response.status, error.response.statusText);   
     }
@@ -61,7 +65,7 @@ class XrayRestClient {
       }
     };
     try {
-      return await axios.post('/import/execution', requestBody, config);
+      return await instance.post('/import/execution', requestBody, config);
     } catch (error) {
       throw new ClientError('Error Sending Xray json results in to jira', error.message, error.response.status, error.response.statusText);   
     }
@@ -95,7 +99,7 @@ class XrayRestClient {
   };
 
     try {
-      return await axios(config);
+      return await instance(config);
     } catch (error) {
       throw new ClientError('Error Mapping execution id into xray', error.message, error.response.status, error.response.statusText);   
     }
