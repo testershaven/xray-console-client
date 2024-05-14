@@ -17,7 +17,6 @@ class XrayWorker {
         tcs.map(tC => {
             let expectedSteps = [];
             let actualSteps = [];
-            let labels = []
             for (const stepNumber in tC.steps) {
                 let rawStep = tC.steps[stepNumber]
                 
@@ -52,27 +51,20 @@ class XrayWorker {
             }
 
             let failed = (actualSteps.some(step => step.status === "FAILED"));
+            let status = (failed) ? 'FAILED' : 'PASSED';
+            let summary = tC.name + " - Example line: " + tC.line;
+            let labels = []
 
             if (tC.tags !== undefined) {
                 tC.tags.forEach(tag => { labels.push(tag.name.replaceAll('@', '')) });
             }
             
-            let test = {
-                status: (failed) ? 'FAILED' : 'PASSED',
-                testInfo : {
-                    projectKey: options.projectKey,
-                    summary: tC.name + " - Example line: " + tC.line,
-                    type: options.testType,
-                    steps: expectedSteps,
-                    labels
-                },
-                steps: actualSteps,
-            };
+            let test = this.createXrayTest(options, summary, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayJsonFromSpecflowResults(options) {
@@ -82,19 +74,16 @@ class XrayWorker {
         let testCases = [];
         executionJson.ExecutionResults.map(eR => {
             
-            let test = {
-                testInfo : {
-                    projectKey: options.projectKey,
-                    summary: eR.ScenarioTitle,
-                    type: options.testType,
-                },
-                status: (eR.Status === 'OK') ? 'PASSED' : 'FAILED',
-            };
+            let status = (eR.Status === 'OK') ? 'PASSED' : 'FAILED';
+            let labels = [];
+            let expectedSteps = [];
+            let actualSteps = [];
+            let test = this.createXrayTest(options, eR.ScenarioTitle, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayJsonFromJunitXmlResults(options) {
@@ -137,20 +126,17 @@ class XrayWorker {
                 }
             }
 
-            let test = {
-                status: (failed) ? 'FAILED' : 'PASSED',
-                comment: (errors !== "") ? errors : 'Test passed ok',
-                testInfo: {
-                    projectKey: options.projectKey,
-                    summary: attributes.name,
-                    type: options.testType,
-                },
-            };
+            let status =  (failed) ? 'FAILED' : 'PASSED';
+            let labels = [];
+            let expectedSteps = [];
+            let actualSteps = [];
+
+            let test = this.createXrayTest(options, attributes.name, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayJsonFromAllureXmlResults(options) {
@@ -181,20 +167,17 @@ class XrayWorker {
                         steps.push(newStep);
                     }
 
-                    let testCase = {
-                        testKey : rtc.testId,
-                        start : allureWorker.formatEpoch(parseInt(rtc.start)),
-                        finish : allureWorker.formatEpoch(parseInt(rtc.stop)),
-                        status : rtc.status,
-                        defects,
-                        evidence,
-                    };
-                    testCases.push(testCase);
+                    let start = allureWorker.formatEpoch(parseInt(rtc.start));
+                    let finish = allureWorker.formatEpoch(parseInt(rtc.stop));
+
+                    let test = this.createXrayTest(options, attributes.name, undefined, undefined, rtc.status, undefined, rtc.testId, start, finish, undefined, defects, evidence);
+
+                    testCases.push(test);
                 }
             });
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayRequestFromAllureJson(options) {
@@ -242,27 +225,44 @@ class XrayWorker {
             });
 
             let testName = (rawTest.name === rawTest.fullName) ? rawTest.historyId : rawTest.fullName;
+            let status = (rawTest.status === "passed") ? 'PASSED' : 'FAILED';
 
-            let test = {
-                status: (rawTest.status === "passed") ? 'PASSED' : 'FAILED',
-                testInfo: {
-                    projectKey: options.projectKey,
-                    summary: testName,
-                    type: options.testType,
-                    steps: expectedSteps,
-                    labels
-                },
-                evidence,
-                steps: actualSteps,
-            };
+            let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, evidence);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
-    createResponse(testCases, options) {
+    createXrayTest(options, summary, expectedSteps, labels, status, actualSteps, testKey, start, finish, comment, defects, evidence) {
+        let testInfo = {
+            projectKey: options.projectKey,
+            summary,
+            type: options.testType,
+        };
+
+        if (expectedSteps !== undefined) { testInfo['steps'] = expectedSteps };
+        if (labels !== undefined) { testInfo['labels'] = labels };
+
+        let xrayTestCase = {
+            status,
+            testInfo,
+        };
+
+        if (testKey !== undefined) { xrayTestCase['testKey'] = testKey };
+        if (start !== undefined) { xrayTestCase['start'] = start };
+        if (finish !== undefined) { xrayTestCase['finish'] = finish };
+        if (comment !== undefined) { xrayTestCase['comment'] = comment };
+        if (actualSteps !== undefined) { xrayTestCase['steps'] = actualSteps };
+        if (defects !== undefined) { xrayTestCase['defects'] = defects };
+        if (evidence !== undefined) { xrayTestCase['evidence'] = evidence };
+        if (options.customFields !== undefined) { xrayTestCase['customFields'] = options.customFields };
+
+        return xrayTestCase;
+    }
+
+    createXrayResponse(testCases, options) {
         let response = {
             tests: testCases
         }

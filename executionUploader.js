@@ -5,7 +5,6 @@ const boxen = require("boxen");
 const yargs = require("yargs");
 const {JiraRestClient} = require("./clients/jira_rest_client");
 const {XrayRestClient} = require("./clients/xray_rest_client");
-const {XrayGraphqlClient} = require("./clients/xray_graphql_client");
 const {InputError} = require("./errors/input_error");
 const { XrayWorker } = require("./workers/xray_worker");
 const { Worker } = require("./workers/worker");
@@ -26,7 +25,9 @@ const options = yargs
 .option("ju", { alias: "jiraUrl", describe: "Jira Url in case you want to link executions to jira issues", type: "string", demandOption: false })
 .option("jbt", { alias: "jiraBasicToken", describe: "Jira Token (PAT) in case you want to link executions to jira issues", type: "string", demandOption: false })
 .option("i", { alias: "issueKey", describe: "Issue to be linked to executions (Youll need a Jira url and Jira token)", type: "string", demandOption: false }) 
-.option("e", { alias: "environments", describe: "Xray test enviroment variable", type: "string", demandOption: false }) 
+.option("e", { alias: "environments", describe: "Xray test enviroment variable", type: "string", demandOption: false })
+.option("cf", { alias: "customFields", describe: "Jira custom fields to be attached to test case", type: "array", demandOption: false })
+
 .argv;
 
 const optionsText = chalk.white.bold(
