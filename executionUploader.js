@@ -140,19 +140,31 @@ async function uploadExecution(options) {
           if(options.issueLinkType == undefined) {
                console.log('You are passing a jira issue to link but no the type of linking');
           }
-
-          await jiraRestClient.mapExecutionToIssue(options, executionKey);
-          console.log('Execution mapped correctly to issue');
+          
+          try{
+               await jiraRestClient.mapExecutionToIssue(options, executionKey);
+               console.log('Execution mapped correctly to issue');
+          } catch(error) {
+               console.log('Was not possible to map execution key to ticket being tested')
+          }
      }
 
      if(options.jiraCustomFields) {
-          let issueKeys = await graphqlXrayClient.getTestsByTestPlanKey(options.planKey)
-          
-          var customFields = options.jiraCustomFields.replace(/\s/g, "").split(',');
+          try{
+               let issueKeys = await graphqlXrayClient.getTestsByTestPlanKey(options.planKey)
+               
+               var customFields = options.jiraCustomFields.replace(/\s/g, "").split(',');
 
-          for (let index = 0; index < issueKeys.length; index++) {
-               const element = issueKeys[index];
-               await jiraRestClient.addValueToCustomField(customFields[0], customFields[1], element);
+               for (let index = 0; index < issueKeys.length; index++) {
+                    try{
+                         const element = issueKeys[index];
+                         await jiraRestClient.addValueToCustomField(customFields[0], customFields[1], element);
+                    } catch(error) {
+                         console.log(`Was not possible to add jira custom field ${customFields[0]} to test ${element}, because error: ` + error.message)
+                    }
+               }
+          } catch(error) {
+               console.log('Was not possible to add jira custom fields to tests in plan, because error: ' + error.message);
           }
      }
 }
