@@ -4,7 +4,7 @@ const {JunitWorker} = require("./junit_worker");
 
 class XrayWorker {
     async generateXrayJsonFromCucumberJsonResults(options) {
-        console.log('Generate xray json from cucumber report');
+        console.log('Generate xray json from cucumber json results');
         let tcs = [];
         let executionJson = JSON.parse(fs.readFileSync(options.filePath).toString());
         executionJson.forEach(feature => {
@@ -17,7 +17,6 @@ class XrayWorker {
         tcs.map(tC => {
             let expectedSteps = [];
             let actualSteps = [];
-            let labels = []
             for (const stepNumber in tC.steps) {
                 let rawStep = tC.steps[stepNumber]
                 
@@ -52,52 +51,43 @@ class XrayWorker {
             }
 
             let failed = (actualSteps.some(step => step.status === "FAILED"));
+            let status = (failed) ? 'FAILED' : 'PASSED';
+            let summary = tC.name + " - Example line: " + tC.line;
+            let labels = []
 
             if (tC.tags !== undefined) {
                 tC.tags.forEach(tag => { labels.push(tag.name.replaceAll('@', '')) });
             }
             
-            let test = {
-                status: (failed) ? 'FAILED' : 'PASSED',
-                testInfo : {
-                    projectKey: options.projectKey,
-                    summary: tC.name + " - Example line: " + tC.line,
-                    type: options.testType,
-                    steps: expectedSteps,
-                    labels
-                },
-                steps: actualSteps,
-            };
+            let test = this.createXrayTest(options, summary, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayJsonFromSpecflowResults(options) {
-        console.log('Generate xray json from cucumber report');
+        console.log('Generate xray json from specflow results');
         let executionJson = JSON.parse(fs.readFileSync(options.filePath).toString());
 
         let testCases = [];
         executionJson.ExecutionResults.map(eR => {
             
-            let test = {
-                testInfo : {
-                    projectKey: options.projectKey,
-                    summary: eR.ScenarioTitle,
-                    type: options.testType,
-                },
-                status: (eR.Status === 'OK') ? 'PASSED' : 'FAILED',
-            };
+            let status = (eR.Status === 'OK') ? 'PASSED' : 'FAILED';
+            let labels = [];
+            let expectedSteps = [];
+            let actualSteps = [];
+            let test = this.createXrayTest(options, eR.ScenarioTitle, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayJsonFromJunitXmlResults(options) {
+        console.log('Generate xray json from junit xml results');
         const junitWorker = new JunitWorker();
         let testSuite = await junitWorker.generateSuitesFromJunitXml(options.filePath);
 
@@ -137,24 +127,21 @@ class XrayWorker {
                 }
             }
 
-            let test = {
-                status: (failed) ? 'FAILED' : 'PASSED',
-                comment: (errors !== "") ? errors : 'Test passed ok',
-                testInfo: {
-                    projectKey: options.projectKey,
-                    summary: attributes.name,
-                    type: options.testType,
-                },
-            };
+            let status =  (failed) ? 'FAILED' : 'PASSED';
+            let labels = [];
+            let expectedSteps = [];
+            let actualSteps = [];
+
+            let test = this.createXrayTest(options, attributes.name, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayJsonFromAllureXmlResults(options) {
-
+        console.log('Generate xray json from allure xml results');
         const allureWorker = new AllureWorker();
         let testSuites = await allureWorker.generateSuitesFromAllureXml(options.filePath);
 
@@ -181,23 +168,21 @@ class XrayWorker {
                         steps.push(newStep);
                     }
 
-                    let testCase = {
-                        testKey : rtc.testId,
-                        start : allureWorker.formatEpoch(parseInt(rtc.start)),
-                        finish : allureWorker.formatEpoch(parseInt(rtc.stop)),
-                        status : rtc.status,
-                        defects,
-                        evidence,
-                    };
-                    testCases.push(testCase);
+                    let start = allureWorker.formatEpoch(parseInt(rtc.start));
+                    let finish = allureWorker.formatEpoch(parseInt(rtc.stop));
+
+                    let test = this.createXrayTest(options, attributes.name, undefined, undefined, rtc.status, undefined, rtc.testId, start, finish, undefined, defects, evidence);
+
+                    testCases.push(test);
                 }
             });
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
     async generateXrayRequestFromAllureJson(options) {
+        console.log('Generate xray json from allure json results');
         const allureWorker = new AllureWorker();
         let rawTests = await allureWorker.generateSuitesFromAllureJson(options.filePath);
 
@@ -242,27 +227,43 @@ class XrayWorker {
             });
 
             let testName = (rawTest.name === rawTest.fullName) ? rawTest.historyId : rawTest.fullName;
+            let status = (rawTest.status === "passed") ? 'PASSED' : 'FAILED';
 
-            let test = {
-                status: (rawTest.status === "passed") ? 'PASSED' : 'FAILED',
-                testInfo: {
-                    projectKey: options.projectKey,
-                    summary: testName,
-                    type: options.testType,
-                    steps: expectedSteps,
-                    labels
-                },
-                evidence,
-                steps: actualSteps,
-            };
+            let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, evidence);
 
             testCases.push(test);
         });
 
-        return this.createResponse(testCases, options)
+        return this.createXrayResponse(testCases, options)
     }
 
-    createResponse(testCases, options) {
+    createXrayTest(options, summary, expectedSteps, labels, status, actualSteps, testKey, start, finish, comment, defects, evidence) {
+        let testInfo = {
+            projectKey: options.projectKey,
+            summary,
+            type: options.testType,
+        };
+
+        if (expectedSteps !== undefined) { testInfo['steps'] = expectedSteps };
+        if (labels !== undefined) { testInfo['labels'] = labels };
+
+        let xrayTestCase = {
+            status,
+            testInfo,
+        };
+
+        if (testKey !== undefined) { xrayTestCase['testKey'] = testKey };
+        if (start !== undefined) { xrayTestCase['start'] = start };
+        if (finish !== undefined) { xrayTestCase['finish'] = finish };
+        if (comment !== undefined) { xrayTestCase['comment'] = comment };
+        if (actualSteps !== undefined) { xrayTestCase['steps'] = actualSteps };
+        if (defects !== undefined) { xrayTestCase['defects'] = defects };
+        if (evidence !== undefined) { xrayTestCase['evidence'] = evidence };
+
+        return xrayTestCase;
+    }
+
+    createXrayResponse(testCases, options) {
         let response = {
             tests: testCases
         }

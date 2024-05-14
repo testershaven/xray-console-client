@@ -4,47 +4,53 @@ const chalk = require("chalk");
 const boxen = require("boxen");
 const yargs = require("yargs");
 const {JiraRestClient} = require("./clients/jira_rest_client");
-const {XrayRestClient} = require("./clients/xray_rest_client");
 const {XrayGraphqlClient} = require("./clients/xray_graphql_client");
+const {XrayRestClient} = require("./clients/xray_rest_client");
 const {InputError} = require("./errors/input_error");
 const { XrayWorker } = require("./workers/xray_worker");
 const { Worker } = require("./workers/worker");
 
 const options = yargs
-.usage(`Usage: --tt <testType> --ci <clientID> --cs <clientSecret> --f <filePath> --pk <projectKey> --pn <planKey> --ek <execution> --s <summary> --d <description>`)
-.option("tt", { alias: "testType", describe: "Test type cucumber-specflow | allure-xml | cucumber-json | allure-json", type: "string", demandOption: true })
+.option("xu", { alias: "xrayUrl", describe: "Xray Url", type: "string", demandOption: true })
 .option("ci", { alias: "clientId", describe: "Client Id", type: "string", demandOption: true })
 .option("cs", { alias: "clientSecret", describe: "Client secret", type: "string", demandOption: true })
+.option("ju", { alias: "jiraUrl", describe: "Jira Url in case you want to link executions to jira issues", type: "string", demandOption: true })
+.option("jbt", { alias: "jiraBasicToken", describe: "Jira Token (PAT) in case you want to link executions to jira issues", type: "string", demandOption: true })
+.option("tt", { alias: "testType", describe: "Test type cucumber-specflow | allure-xml | cucumber-json | allure-json", type: "string", demandOption: true })
 .option("f", { alias: "filePath", describe: "File path", type: "string", demandOption: true })
-.option("xu", { alias: "xrayUrl", describe: "Xray Url", type: "string", demandOption: true })
 .option("pk", { alias: "projectKey", describe: "Project Key", type: "string", demandOption: true }) 
-.option("ek", { alias: "executionKey", describe: "Execution Key", type: "string", demandOption: false })
-.option("pn", { alias: "planKey", describe: "Plan Key", type: "string", demandOption: false }) 
-.option("s", { alias: "summary", describe: "Test Execution Summary", type: "string", demandOption: false }) 
-.option("d", { alias: "description", describe: "Test Execution Description", type: "string", demandOption: false })
+
+.option("ek", { alias: "executionKey", describe: "Execution Key, if not passed will create a new execution under test plan", type: "string", demandOption: false })
+.option("pn", { alias: "planKey", describe: "Plan Key where the test execution will be linked", type: "string", demandOption: false }) 
+.option("s", { alias: "summary", describe: "Test Execution Summary, if none provided will generate one automatically", type: "string", demandOption: false }) 
+.option("d", { alias: "description", describe: "Test Execution Description, if none provided will generate one automatically", type: "string", demandOption: false })
 .option("rv", { alias: "releaseVersion", describe: "Release version which this test execution is linked", type: "string", demandOption: false })
-.option("ju", { alias: "jiraUrl", describe: "Jira Url in case you want to link executions to jira issues", type: "string", demandOption: false })
-.option("jbt", { alias: "jiraBasicToken", describe: "Jira Token (PAT) in case you want to link executions to jira issues", type: "string", demandOption: false })
-.option("i", { alias: "issueKey", describe: "Issue to be linked to executions (Youll need a Jira url and Jira token)", type: "string", demandOption: false }) 
-.option("e", { alias: "environments", describe: "Xray test enviroment variable", type: "string", demandOption: false }) 
+.option("i", { alias: "issueKey", describe: "Issue to be linked to executions, needs issueLinkType", type: "string", demandOption: false }) 
+.option("ilt", { alias: "issueLinkType", describe: "Linking type between your execution and the issue", type: "string", demandOption: false }) 
+.option("e", { alias: "environments", describe: "Xray test enviroment variable", type: "string", demandOption: false })
+.option("jcf", { alias: "jiraCustomFields", describe: "Custom fields added to test case ticket, can be multiple passed like '$id,$value", type: "string", demandOption: false })
 .argv;
 
 const optionsText = chalk.white.bold(
-`Execution type: ${options.testType}, \n
+`
 Xray Url: ${options.xrayUrl}, \n
 ClientID: ${options.clientId}, \n
 ClientSecret: ************, \n
-Path: ${options.filePath}, \n
-Project Key: ${options.projectKey} \n
-Plan Key: ${options.planKey} \n
-Execution Key: ${options.executionKey} \n
-Summary: ${options.summary} \n
-Description: ${options.description} \n
-Environments: ${options.environments} \n
-Release version: ${options.releaseVersion} \n
 Jira Url: ${options.jiraUrl} \n
 Jira Basic Token: ************ \n
-Issue Key: ${options.issueKey}`);
+Test type: ${options.testType}, \n
+Path: ${options.filePath}, \n
+Project Key: ${options.projectKey} \n
+Execution Key: ${options.executionKey} \n
+Plan Key: ${options.planKey} \n
+Summary: ${options.summary} \n
+Description: ${options.description} \n
+Release version: ${options.releaseVersion} \n
+Issue Key: ${options.issueKey} \n
+Issue Key Link type: ${options.issueLinkType} \n
+Environments: ${options.environments} \n
+Jira Custom Fields: ${options.jiraCustomFields}
+`);
 
 const greenBox = {
  padding: 1,
@@ -60,17 +66,11 @@ console.log(optionsSummary);
 uploadExecution(options);
 
 async function uploadExecution(options) {
-     if(options.issueKey !== undefined && (options.jiraBasicToken === undefined || options.jiraUrl === undefined)) {
-          throw new InputError('You are passing a jira issue keyid but basic token or url missing to connect');   
-     } else if(options.jiraBasicToken !== undefined && (options.issueKey === undefined || options.jiraUrl === undefined)) {
-          throw new InputError('You are passing a jira basic token but issue key id or url missing to connect');
-     } else if(options.jiraUrl !== undefined && (options.issueKey === undefined || options.jiraBasicToken === undefined)) {
-          throw new InputError('You are passing a jira url but issue key id or basic token missing to connect');
-     }
-
      const xrayWorker = new XrayWorker();
      const restXrayClient = new XrayRestClient(options.xrayUrl + '/api/v2');
+     const jiraRestClient = new JiraRestClient(options.jiraUrl, options.jiraBasicToken);
      await restXrayClient.login(options.clientId, options.clientSecret);
+     const graphqlXrayClient = new XrayGraphqlClient(options.xrayUrl + '/api/v2/graphql', await restXrayClient.getAuthToken())
 
      let xrayBody;
      switch(options.testType.toLowerCase()) {
@@ -86,6 +86,7 @@ async function uploadExecution(options) {
                break;
           case "allure-xml":
                console.log('Uploading allure xml execution');
+               options.testType = 'Manual';
                xrayBody = await xrayWorker.generateXrayJsonFromAllureXmlResults(options);
           break;
           case "cucumber-json":
@@ -99,7 +100,7 @@ async function uploadExecution(options) {
                xrayBody = await xrayWorker.generateXrayRequestFromAllureJson(options);
                break;
           default:
-               throw new InputError('Check test type input, options available are cucumber-specflow | allure-xml | cucumber-json | allure-xml');
+               throw new InputError('Check test type input, options available are cucumber-specflow | allure-xml | cucumber-json | allure-xml | junit-xml');
      }
 
      let executionKey;
@@ -130,8 +131,40 @@ async function uploadExecution(options) {
      }
 
      if(options.issueKey) {
-          const jiraRestClient = new JiraRestClient(options.jiraUrl, options.jiraBasicToken);
-          await jiraRestClient.mapExecutionToIssue(options, executionKey);
-          console.log('Execution mapped correctly to issue');
+          if(options.jiraBasicToken == undefined) {
+               throw new InputError('You are passing a jira issue to link but no authorization token');
+          } 
+          if(options.jiraUrl == undefined) {
+               console.log('You are passing a jira issue to link but no jira url');
+          }
+          if(options.issueLinkType == undefined) {
+               console.log('You are passing a jira issue to link but no the type of linking');
+          }
+          
+          try{
+               await jiraRestClient.mapExecutionToIssue(options, executionKey);
+               console.log('Execution mapped correctly to issue');
+          } catch(error) {
+               console.log('Was not possible to map execution key to ticket being tested')
+          }
+     }
+
+     if(options.jiraCustomFields) {
+          try{
+               let issueKeys = await graphqlXrayClient.getTestsByTestPlanKey(options.planKey)
+               
+               var customFields = options.jiraCustomFields.replace(/\s/g, "").split(',');
+
+               for (let index = 0; index < issueKeys.length; index++) {
+                    try{
+                         const element = issueKeys[index];
+                         await jiraRestClient.addValueToCustomField(customFields[0], customFields[1], element);
+                    } catch(error) {
+                         console.log(`Was not possible to add jira custom field ${customFields[0]} to test ${element}, because error: ` + error.message)
+                    }
+               }
+          } catch(error) {
+               console.log('Was not possible to add jira custom fields to tests in plan, because error: ' + error.message);
+          }
      }
 }

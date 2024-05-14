@@ -1,17 +1,45 @@
-const axios = require('axios').default;
+const axios = require('axios');
 const {ClientError} = require("../errors/client_error");
+
+let instance;
 
 class JiraRestClient {
   constructor(host, basicToken) {
-    axios.defaults.baseURL = host;
-    axios.defaults.headers.common['Authorization'] = 'Basic ' + basicToken;
+      instance = axios.create({
+      baseURL: host,
+      headers: {
+        'Authorization': 'Basic ' + basicToken
+      },
+    });
+  }
+
+  async addValueToCustomField(customFieldId, customFieldValue, key) {
+    console.log(`Adding value ${customFieldValue} in custom field ${customFieldId} from issue ${key}`)
+
+    var data = `{ "fields" : { "${customFieldId}" : "${customFieldValue}" } }`;
+
+    let config = {
+      url: `/rest/api/3/issue/${key}`,
+      method: 'put',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data
+    };
+
+    try {
+      return instance(config);
+    } catch (error) {
+      throw new ClientError(`Error adding value ${customFieldValue} in custom field ${customFieldId} from issue ${key}`, error.message, error.response.status, error.response.data);   
+    }
   }
 
   async mapExecutionToIssue(options, executionKey) {
-    console.log('Sending xray json results into JIRA Xray')
+    console.log('Linking issue to execution')
+
     let data = JSON.stringify({
       "type": {
-        "id": "10618"
+        "id": options.issueLinkType
       },
       "inwardIssue": {
         "key": executionKey
@@ -27,13 +55,16 @@ class JiraRestClient {
     console.log('issueLinkRequest:' + data)
 
     let config = {
+      method: 'post',
+      url: '/rest/api/2/issueLink',
       headers: {
         'Content-Type': 'application/json', 
       },
+      data
     };
 
     try {
-      return await axios.post('/rest/api/2/issueLink', data, config);
+      return await instance(config);
     } catch (error) {
       throw new ClientError('Error Mapping execution id into xray', error.message, error.response.status, error.response.data);   
     }

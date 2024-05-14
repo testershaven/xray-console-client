@@ -12,6 +12,13 @@ jobs:
     - 
       name: Checkout
       uses: actions/checkout@v3.5.2
+    
+    - 
+      name: Extract current version
+      id: extract_version
+      run: |
+        echo "::set-output name=version::$(node -p "require('./package.json').version")"
+
     -
       name: Login to Docker Hub
       uses: docker/login-action@v2
@@ -25,4 +32,4 @@ jobs:
         push: true
         context: .
         file: ./docker/Dockerfile 
-        tags: marca1234/xray-console-client:${{ github.run_id }} , marca1234/xray-console-client:latest
+        tags: marca1234/xray-console-client:${{ steps.increment_version.outputs.version }} , marca1234/xray-console-client:latest
