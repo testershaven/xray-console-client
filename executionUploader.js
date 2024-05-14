@@ -28,7 +28,7 @@ const options = yargs
 .option("i", { alias: "issueKey", describe: "Issue to be linked to executions, needs issueLinkType", type: "string", demandOption: false }) 
 .option("ilt", { alias: "issueLinkType", describe: "Linking type between your execution and the issue", type: "string", demandOption: false }) 
 .option("e", { alias: "environments", describe: "Xray test enviroment variable", type: "string", demandOption: false })
-.option("jcf", { alias: "jiraCustomFields", describe: "Custom fields added to test case ticket, can be multiple passed like { \"id\": $id, \"value\": $value}", type: "string", demandOption: false })
+.option("jcf", { alias: "jiraCustomFields", describe: "Custom fields added to test case ticket, can be multiple passed like '$id,$value", type: "string", demandOption: false })
 .argv;
 
 const optionsText = chalk.white.bold(
