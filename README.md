@@ -37,16 +37,17 @@ Simple console client that comunicates to Jira Xray and uploads tests and execut
 ### Incoming features
 
 - Create/update executions
-    - ?
+    - Tell me what you need
 - Mapping
     - Add Xray custom fields in test cases
+    - Tell me what you need
 
 ## Usage
 
 ### Execution uploader
 
 ```
-node executionUploader.js --ju $(jiraUrl) --jbt $(jira_basic_token)  --tt $(testType) --f $(folder/file) --pk $(projectKey) --pn $(testPlanKey) --s 'Test execution for $(issueKey)' --xu $(xrayUrl) --ci $(jira_client_id) --cs $(jira_client_secret)  --i $(issueKey) 
+node executionUploader.js --ju $(jiraUrl) --jbt $(jira_basic_token) --xu $(xrayUrl) --ci $(jira_client_id) --cs $(jira_client_secret) --tt $(testType) --f $(folder/file) --pk $(projectKey) --pn $(testPlanKey) --s 'Test execution for $(issueKey)' -e ${executionKey} -d ${description} --rv {releaseVersion} --i $(issueKey) --ilt ${issueLinkType} --e {environments} --jcf {jiraCustomFields}
 ```
 
 | Flag              | Full Option         | Description                                                                                           | Required |
