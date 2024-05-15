@@ -69,7 +69,7 @@ node executionUploader.js --ju $(jiraUrl) --jbt $(jira_basic_token) --xu $(xrayU
 | --i               | --issueKey          | Issue to be linked to executions (Youll need a Jira url and Jira token, only available for JIRA CLOUD | NO       |
 | --ilt             | --issueLinkType     | Issue to be linked to executions, needs issueLinkType                                                 | NO       |
 | --e               | --environments      | Xray test enviroment variable                                                                         | NO       |
-| --jcf             | --jiraCustomFields  | Custom fields added to test case ticket, can be multiple passed like '$id,$value                   | NO       |
+| --jcf             | --jiraCustomFields  | Custom fields added to test case ticket, can be multiple passed like '$id,$value                      | NO       |
 
 
 Example

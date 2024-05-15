@@ -122,6 +122,8 @@ async function uploadExecution(options) {
                     testExecutionKey: executionKey
                }
 
+               if(xrayBody.info !== undefined) body['info'] = xrayBody.info;
+
                await restXrayClient.sendResultsAsXrayJson(body);
                await new Promise(resolve => setTimeout(resolve, 3000));
           }

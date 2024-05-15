@@ -270,24 +270,25 @@ class XrayWorker {
 
         if (options.executionKey !== undefined) {
             response['testExecutionKey'] = options.executionKey;
-        } else {
-            let info =  {
-                project: options.projectKey,
-                summary : (options.summary !== undefined) ? options.summary : 'Execution automatically imported',
-                description : (options.description !== undefined) ? options.description : "This execution is automatically created when importing execution results from an external source",
-                testPlanKey : options.planKey
-            }
+        } 
 
-            if (options.environments !== undefined) {
-                info['testEnvironments'] = options.environments.split(",");
-            }
-
-            if (options.releaseVersion !== undefined) {
-                info['version'] = options.releaseVersion;
-            }
-
-            response['info'] = info;
+        let info =  {
+            project: options.projectKey,
+            testPlanKey : options.planKey
         }
+
+        info['summary'] = (options.summary !== undefined) ? options.summary : 'Execution automatically imported';
+        info['description'] = (options.description !== undefined) ? options.description : "This execution is automatically created when importing execution results from an external source";
+
+        if (options.environments !== undefined) {
+            info['testEnvironments'] = options.environments.split(",");
+        }
+
+        if (options.releaseVersion !== undefined) {
+            info['version'] = options.releaseVersion;
+        }
+
+        response['info'] = info;
 
         return response;
     }
