@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 
-const chalk = require("chalk");
-const boxen = require("boxen");
-const yargs = require("yargs");
-const {JiraRestClient} = require("./clients/jira_rest_client");
-const {XrayGraphqlClient} = require("./clients/xray_graphql_client");
-const {XrayRestClient} = require("./clients/xray_rest_client");
-const {InputError} = require("./errors/input_error");
-const { XrayWorker } = require("./workers/xray_worker");
-const { Worker } = require("./workers/worker");
+// const chalk = require("chalk");
+import chalk from "chalk";
+// const boxen = require("boxen");
+import boxen from "boxen";
+// const yargs = require("yargs");
+import yargs from 'yargs'
+// const {JiraRestClient} = require("./clients/jira_rest_client");
+import {JiraRestClient} from "./clients/jira_rest_client.js";
+// const {XrayGraphqlClient} = require("./clients/xray_graphql_client");
+import {XrayGraphqlClient} from "./clients/xray_graphql_client.js";
+// const {XrayRestClient} = require("./clients/xray_rest_client");
+import {XrayRestClient} from "./clients/xray_rest_client.js";
+// const {InputError} = require("./errors/input_error");
+import {InputError} from "./errors/input_error.js";
+// const { XrayWorker } = require("./workers/xray_worker");
+import {XrayWorker} from "./workers/xray_worker.js";
+// const { Worker } = require("./workers/worker");
+import {Worker} from "./workers/worker.js";
 
 const options = yargs
 .option("xu", { alias: "xrayUrl", describe: "Xray Url", type: "string", demandOption: true })
@@ -18,15 +27,15 @@ const options = yargs
 .option("jbt", { alias: "jiraBasicToken", describe: "Jira Token (PAT) in case you want to link executions to jira issues", type: "string", demandOption: true })
 .option("tt", { alias: "testType", describe: "Test type cucumber-specflow | allure-xml | cucumber-json | allure-json", type: "string", demandOption: true })
 .option("f", { alias: "filePath", describe: "File path", type: "string", demandOption: true })
-.option("pk", { alias: "projectKey", describe: "Project Key", type: "string", demandOption: true }) 
+.option("pk", { alias: "projectKey", describe: "Project Key", type: "string", demandOption: true })
 
 .option("ek", { alias: "executionKey", describe: "Execution Key, if not passed will create a new execution under test plan", type: "string", demandOption: false })
-.option("pn", { alias: "planKey", describe: "Plan Key where the test execution will be linked", type: "string", demandOption: false }) 
-.option("s", { alias: "summary", describe: "Test Execution Summary, if none provided will generate one automatically", type: "string", demandOption: false }) 
+.option("pn", { alias: "planKey", describe: "Plan Key where the test execution will be linked", type: "string", demandOption: false })
+.option("s", { alias: "summary", describe: "Test Execution Summary, if none provided will generate one automatically", type: "string", demandOption: false })
 .option("d", { alias: "description", describe: "Test Execution Description, if none provided will generate one automatically", type: "string", demandOption: false })
 .option("rv", { alias: "releaseVersion", describe: "Release version which this test execution is linked", type: "string", demandOption: false })
-.option("i", { alias: "issueKey", describe: "Issue to be linked to executions, needs issueLinkType", type: "string", demandOption: false }) 
-.option("ilt", { alias: "issueLinkType", describe: "Linking type between your execution and the issue", type: "string", demandOption: false }) 
+.option("i", { alias: "issueKey", describe: "Issue to be linked to executions, needs issueLinkType", type: "string", demandOption: false })
+.option("ilt", { alias: "issueLinkType", describe: "Linking type between your execution and the issue", type: "string", demandOption: false })
 .option("e", { alias: "environments", describe: "Xray test enviroment variable", type: "string", demandOption: false })
 .option("jcf", { alias: "jiraCustomFields", describe: "Custom fields added to test case ticket, can be multiple passed like '$id,$value", type: "string", demandOption: false })
 .argv;
@@ -122,6 +131,8 @@ async function uploadExecution(options) {
                     testExecutionKey: executionKey
                }
 
+               if(xrayBody.info !== undefined) body['info'] = xrayBody.info;
+
                await restXrayClient.sendResultsAsXrayJson(body);
                await new Promise(resolve => setTimeout(resolve, 3000));
           }
@@ -133,14 +144,14 @@ async function uploadExecution(options) {
      if(options.issueKey) {
           if(options.jiraBasicToken == undefined) {
                throw new InputError('You are passing a jira issue to link but no authorization token');
-          } 
+          }
           if(options.jiraUrl == undefined) {
                console.log('You are passing a jira issue to link but no jira url');
           }
           if(options.issueLinkType == undefined) {
                console.log('You are passing a jira issue to link but no the type of linking');
           }
-          
+
           try{
                await jiraRestClient.mapExecutionToIssue(options, executionKey);
                console.log('Execution mapped correctly to issue');
@@ -152,7 +163,7 @@ async function uploadExecution(options) {
      if(options.jiraCustomFields) {
           try{
                let issueKeys = await graphqlXrayClient.getTestsByTestPlanKey(options.planKey)
-               
+
                var customFields = options.jiraCustomFields.replace(/\s/g, "").split(',');
 
                for (let index = 0; index < issueKeys.length; index++) {

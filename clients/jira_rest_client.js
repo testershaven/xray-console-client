@@ -1,9 +1,11 @@
-const axios = require('axios');
-const {ClientError} = require("../errors/client_error");
+// const axios = require('axios');
+import axios from "axios";
+// const {ClientError} = require("../errors/client_error");
+import {ClientError} from '../errors/client_error.js';
 
 let instance;
 
-class JiraRestClient {
+export class JiraRestClient {
   constructor(host, basicToken) {
       instance = axios.create({
       baseURL: host,
@@ -30,7 +32,7 @@ class JiraRestClient {
     try {
       return instance(config);
     } catch (error) {
-      throw new ClientError(`Error adding value ${customFieldValue} in custom field ${customFieldId} from issue ${key}`, error.message, error.response.status, error.response.data);   
+      throw new ClientError(`Error adding value ${customFieldValue} in custom field ${customFieldId} from issue ${key}`, error.message, error.response.status, error.response.data);
     }
   }
 
@@ -58,7 +60,7 @@ class JiraRestClient {
       method: 'post',
       url: '/rest/api/2/issueLink',
       headers: {
-        'Content-Type': 'application/json', 
+        'Content-Type': 'application/json',
       },
       data
     };
@@ -66,9 +68,7 @@ class JiraRestClient {
     try {
       return await instance(config);
     } catch (error) {
-      throw new ClientError('Error Mapping execution id into xray', error.message, error.response.status, error.response.data);   
+      throw new ClientError('Error Mapping execution id into xray', error.message, error.response.status, error.response.data);
     }
   }
 }
-
-module.exports = {JiraRestClient}

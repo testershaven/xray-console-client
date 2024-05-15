@@ -1,7 +1,9 @@
-const fs = require("fs");
-const convert = require("xml-js");
+// const fs = require("fs");
+import fs from 'fs';
+// const convert = require("xml-js");
+import convert from "xml-js";
 
-class JunitWorker {
+export class JunitWorker {
     async generateSuitesFromJunitXml(resultsDir) {
         let testsuites = [];
 
@@ -22,5 +24,3 @@ class JunitWorker {
         return testsuites
     }
 }
-
-module.exports = {JunitWorker};

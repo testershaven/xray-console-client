@@ -1,8 +1,10 @@
-const fs = require("fs");
-const convert = require("xml-js");
-const {AllureWorkerError} = require("../errors/allure_worker_error");
-
-class AllureWorker {
+// const fs = require("fs");
+import fs from "fs";
+// const convert = require("xml-js");
+import convert from "xml-js";
+// const {AllureWorkerError} = require("../errors/allure_worker_error");
+import {AllureWorkerError} from '../errors/allure_worker_error.js';
+export class AllureWorker {
 
     async generateSuitesFromAllureJson(resultsDir) {
         let tests = [];
@@ -170,7 +172,3 @@ class AllureWorker {
     }
 
 }
-
-
-
-module.exports = {AllureWorker};

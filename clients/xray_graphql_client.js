@@ -1,9 +1,10 @@
-const axios = require('axios');
-const {ClientError} = require("../errors/client_error");
-
+// const axios = require('axios');
+import axios from "axios";
+// const {ClientError} = require("../errors/client_error");
+import {ClientError} from "../errors/client_error.js";
 let instance;
 
-class XrayGraphqlClient {
+export class XrayGraphqlClient {
   constructor(host, bearerToken) {
     instance = axios.create({
       baseURL: host,
@@ -28,7 +29,7 @@ class XrayGraphqlClient {
     try {
       return (await instance(config)).data.data.getTestPlans.results[0].issueId;
     } catch (error) {
-      throw new ClientError('Error getting test plan id by key', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error getting test plan id by key', error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -43,7 +44,7 @@ class XrayGraphqlClient {
     try {
       return (await instance(config)).data.data.getTests.results.map(x => x.issueId)
     } catch (error) {
-      throw new ClientError('Error getting test ids from keys',  error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error getting test ids from keys',  error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -66,7 +67,7 @@ class XrayGraphqlClient {
 
     let config = {
       method: 'post',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
       },
       data : data
@@ -75,7 +76,7 @@ class XrayGraphqlClient {
     try {
       return (await  instance(config)).data.data;
     } catch (error) {
-      throw new ClientError('Error mapping test ids to testplan', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error mapping test ids to testplan', error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -97,7 +98,7 @@ class XrayGraphqlClient {
 
     let config = {
       method: 'post',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
       },
       data : data
@@ -106,7 +107,7 @@ class XrayGraphqlClient {
     try {
       return (await  instance(config)).data.data;
     } catch (error) {
-      throw new ClientError('Error mapping execution id to testplan', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error mapping execution id to testplan', error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -116,14 +117,14 @@ class XrayGraphqlClient {
         query: `{ getTestPlans(jql: "key=${key}", limit: 1) { results { issueId } }  }`,
         variables: {}
       });
-  
+
       let config = {
         method: 'post',
         maxBodyLength: Infinity,
         headers: { 'Content-Type': 'application/json', },
         data : getTestPlanData
       };
-  
+
       let planId = (await instance(config)).data.data.getTestPlans.results[0].issueId;
 
       let getTestsData = JSON.stringify({
@@ -140,21 +141,19 @@ class XrayGraphqlClient {
       }`,
         variables: {}
       });
-  
+
       let getTestsConfig = {
         method: 'post',
         maxBodyLength: Infinity,
         headers: { 'Content-Type': 'application/json', },
         data : getTestsData
       };
-  
+
       let a = await instance(getTestsConfig);
 
       return a.data.data.getTestPlan.tests.results.map(x => x.jira.key);
     } catch (error) {
-      throw new ClientError('Error getting tests keys by test plan key', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error getting tests keys by test plan key', error.message, error.response.status, error.response.statusText);
     }
   }
 }
-
-module.exports = {XrayGraphqlClient}
