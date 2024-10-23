@@ -1,7 +1,7 @@
-const fs = require("fs");
-const JSZip = require("jszip");
+import fs from "fs";
+import JSZip from 'jszip';
 
-class Worker {
+export class Worker {
     async zipFiles(folder) {
         console.log('Zipping files');
         const fileNames = fs.readdirSync(folder);
@@ -11,7 +11,7 @@ class Worker {
             let feature = fs.readFileSync(`${folder}/${fileName}`).toString();
             zip.file(fileName, feature);
         }
-        
+
         return await zip.generateAsync({type:"blob"});
     }
 
@@ -26,5 +26,3 @@ class Worker {
         return result;
     }
 }
-
-module.exports = {Worker}

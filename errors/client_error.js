@@ -1,4 +1,4 @@
-class ClientError extends Error {
+export class ClientError extends Error {
     constructor(title, message, statusCode, statusText) {
         super(title);
         if (Error.captureStackTrace) {
@@ -10,5 +10,3 @@ class ClientError extends Error {
         this.statusText = statusText;
     }
 }
-
-module.exports = {ClientError}

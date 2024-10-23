@@ -1,8 +1,8 @@
-const fs = require("fs");
-const {AllureWorker} = require("./allure_worker");
-const {JunitWorker} = require("./junit_worker");
+import fs from "fs";
+import {AllureWorker} from './allure_worker.js';
+import {JunitWorker} from './junit_worker.js';
 
-class XrayWorker {
+export class XrayWorker {
     async generateXrayJsonFromCucumberJsonResults(options) {
         console.log('Generate xray json from cucumber json results');
         let tcs = [];
@@ -19,7 +19,7 @@ class XrayWorker {
             let actualSteps = [];
             for (const stepNumber in tC.steps) {
                 let rawStep = tC.steps[stepNumber]
-                
+
                 let expectedStep = {
                     action: rawStep.keyword + rawStep.name,
                     data: "",
@@ -32,10 +32,10 @@ class XrayWorker {
                     "comment": rawStep.keyword + rawStep.name,
                     "actualResult": (rawStep.result.error_message !== undefined) ? rawStep.result.error_message : "Step passed OK"
                 };
-                
+
                 let evidences = [];
                 if (rawStep.embeddings !== undefined) {
-                    for (const embeddingNumber in rawStep.embeddings) { 
+                    for (const embeddingNumber in rawStep.embeddings) {
                         let embedding = rawStep.embeddings[embeddingNumber];
                         let evidence = {
                             data: embedding.data,
@@ -45,7 +45,7 @@ class XrayWorker {
                         evidences.push(evidence);
                     }
                 }
-                
+
                 if (evidences.length !== 0) actualStep["evidences"] = evidences;
                 actualSteps.push(actualStep);
             }
@@ -58,7 +58,7 @@ class XrayWorker {
             if (tC.tags !== undefined) {
                 tC.tags.forEach(tag => { labels.push(tag.name.replaceAll('@', '')) });
             }
-            
+
             let test = this.createXrayTest(options, summary, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, undefined, undefined);
 
             testCases.push(test);
@@ -73,7 +73,7 @@ class XrayWorker {
 
         let testCases = [];
         executionJson.ExecutionResults.map(eR => {
-            
+
             let status = (eR.Status === 'OK') ? 'PASSED' : 'FAILED';
             let labels = [];
             let expectedSteps = [];
@@ -192,6 +192,7 @@ class XrayWorker {
             let actualSteps = [];
             let labels = [];
             let evidence = [];
+            let defects = [];
 
             for(const rawEvidence of rawTest.attachments) {
                 let data = fs.readFileSync(`${options.filePath}/${rawEvidence.source}`).toString('base64');
@@ -224,12 +225,14 @@ class XrayWorker {
 
             rawTest.labels.forEach( label => {
                 if(label.name === 'tag') { labels.push(label.value)}
+
+                if(label.name === 'story') { defects.push(label.value)}
             });
 
             let testName = (rawTest.name === rawTest.fullName) ? rawTest.historyId : rawTest.fullName;
             let status = (rawTest.status === "passed") ? 'PASSED' : 'FAILED';
 
-            let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, evidence);
+            let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined,undefined, defects, evidence);
 
             testCases.push(test);
         });
@@ -270,7 +273,7 @@ class XrayWorker {
 
         if (options.executionKey !== undefined) {
             response['testExecutionKey'] = options.executionKey;
-        } 
+        }
 
         let info =  {
             project: options.projectKey,
@@ -293,5 +296,3 @@ class XrayWorker {
         return response;
     }
 }
-
-module.exports = {XrayWorker}

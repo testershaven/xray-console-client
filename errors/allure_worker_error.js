@@ -1,4 +1,4 @@
-class AllureWorkerError extends Error {
+export class AllureWorkerError extends Error {
     constructor(message) {
         super(message);
         if (Error.captureStackTrace) {
@@ -7,5 +7,3 @@ class AllureWorkerError extends Error {
         this.name = 'AllureWorkerError';
     }
 }
-
-module.exports = {AllureWorkerError}

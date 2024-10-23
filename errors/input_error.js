@@ -1,4 +1,4 @@
-class InputError extends Error {
+export class InputError extends Error {
     constructor(message) {
         super(message);
         if (Error.captureStackTrace) {
@@ -7,5 +7,3 @@ class InputError extends Error {
         this.name = 'InputError';
     }
 }
-
-module.exports = {InputError}

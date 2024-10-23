@@ -1,9 +1,8 @@
-const axios = require('axios');
-const {ClientError} = require("../errors/client_error");
-
+import axios from "axios";
+import {ClientError} from '../errors/client_error.js';
 let instance;
 
-class XrayRestClient {
+export class XrayRestClient {
   constructor(host) {
     instance = axios.create({
       baseURL: host,
@@ -21,17 +20,17 @@ class XrayRestClient {
     try {
       loginResponse = (await instance.post(`/authenticate`, { client_id, client_secret }, config));
     } catch (error) {
-      throw new ClientError('Error Logging in to jira', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error Logging in to jira', error.message, error.response.status, error.response.statusText);
     }
     instance.defaults.headers.common['Authorization'] = 'Bearer ' + loginResponse.data;
   }
 
   async sendCucumberTests(projectKey, file) {
     console.log('Sending cucumber feature file as multipart into JIRA Xray')
-    let config = { 
+    let config = {
         headers: {
             'Content-Type': 'multipart/form-data',
-        } 
+        }
     };
 
     let formData = new FormData();
@@ -41,7 +40,7 @@ class XrayRestClient {
     try {
       return await instance.post(path, formData, config);
     } catch (error) {
-      throw new ClientError('Error Sending Cucumber tests in to jira', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error Sending Cucumber tests in to jira', error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -52,7 +51,7 @@ class XrayRestClient {
     try {
     return await axios.post(path, requestBody, config);
     } catch (error) {
-      throw new ClientError('Error Sending Junit results in to jira', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error Sending Junit results in to jira', error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -67,7 +66,7 @@ class XrayRestClient {
     try {
       return await instance.post('/import/execution', requestBody, config);
     } catch (error) {
-      throw new ClientError('Error Sending Xray json results in to jira', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error Sending Xray json results in to jira', error.message, error.response.status, error.response.statusText);
     }
   }
 
@@ -93,7 +92,7 @@ class XrayRestClient {
     method: 'post',
     headers: {
       'Authorization': 'Basic ' + options.jiraBasicToken,
-      'Content-Type': 'application/json', 
+      'Content-Type': 'application/json',
     },
     data: data
   };
@@ -101,9 +100,7 @@ class XrayRestClient {
     try {
       return await instance(config);
     } catch (error) {
-      throw new ClientError('Error Mapping execution id into xray', error.message, error.response.status, error.response.statusText);   
+      throw new ClientError('Error Mapping execution id into xray', error.message, error.response.status, error.response.statusText);
     }
   }
 }
-
-module.exports = {XrayRestClient}
