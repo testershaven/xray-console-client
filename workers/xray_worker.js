@@ -229,7 +229,7 @@ export class XrayWorker {
                 if(label.name === 'story') { defects.push(label.value)}
             });
 
-            let testName = (rawTest.name === rawTest.fullName) ? rawTest.historyId : rawTest.fullName;
+            let testName = (0 < rawTest.name.length <= rawTest.fullName.length ) ? rawTest.name : rawTest.historyId;
             let status = (rawTest.status === "passed") ? 'PASSED' : 'FAILED';
 
             let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined,undefined, defects, evidence);
