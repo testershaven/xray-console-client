@@ -5,7 +5,7 @@
   "description": "console app to manage xray integration",
   "main": "executionUploader.js",
   "scripts": {
-    "test":""
+    "test": "node executionUploader.js --tt allure-json --f './testData/allure-results' --pk CIP --pn CIP-148 --ek CIP-150 --s 'test execution for ticket: $(issueKey), branch: $(branchName)' --jcf 'customfield_19342,CIP-148' --ju https://riverty.atlassian.net --xu https://xray.cloud.getxray.app --jbt ATATT3xFfGF0UKXz6bNtFH6gAt0SOtftp-uLdjJfyzlvl6A6enODkCGvrs1N5nAPbnVJq3J9BG9WRiEtoNtc4Qedmkyk24SIdnid9N9DzV7dUJvcGO5spDNhbc3OlFLcCt_103I6LdVxMqYg77SMhJJ76vvsnVtHjVSdtKlmdWir_LtJ7Ii1Nu0=14FF338A --ci 99EE8C9561174DBFBB198F25E8A94FC0 --cs 8f8242dcaf99305ef675124803dc12b589247a0883a04ba4ec23c74f3b252907"
   },
   "author": "Manuel Marcatili",
   "license": "ISC",

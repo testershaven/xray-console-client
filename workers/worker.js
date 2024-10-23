@@ -1,6 +1,4 @@
-// const fs = require("fs");
 import fs from "fs";
-// const JSZip = require("jszip");
 import JSZip from 'jszip';
 
 export class Worker {

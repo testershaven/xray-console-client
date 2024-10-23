@@ -1,8 +1,5 @@
-// const fs = require("fs");
 import fs from "fs";
-// const convert = require("xml-js");
 import convert from "xml-js";
-// const {AllureWorkerError} = require("../errors/allure_worker_error");
 import {AllureWorkerError} from '../errors/allure_worker_error.js';
 export class AllureWorker {
 

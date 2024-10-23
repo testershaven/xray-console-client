@@ -1,22 +1,13 @@
 #!/usr/bin/env node
 
-// const chalk = require("chalk");
 import chalk from "chalk";
-// const boxen = require("boxen");
 import boxen from "boxen";
-// const yargs = require("yargs");
 import yargs from 'yargs'
-// const {JiraRestClient} = require("./clients/jira_rest_client");
 import {JiraRestClient} from "./clients/jira_rest_client.js";
-// const {XrayGraphqlClient} = require("./clients/xray_graphql_client");
 import {XrayGraphqlClient} from "./clients/xray_graphql_client.js";
-// const {XrayRestClient} = require("./clients/xray_rest_client");
 import {XrayRestClient} from "./clients/xray_rest_client.js";
-// const {InputError} = require("./errors/input_error");
 import {InputError} from "./errors/input_error.js";
-// const { XrayWorker } = require("./workers/xray_worker");
 import {XrayWorker} from "./workers/xray_worker.js";
-// const { Worker } = require("./workers/worker");
 import {Worker} from "./workers/worker.js";
 
 const options = yargs
@@ -113,6 +104,12 @@ async function uploadExecution(options) {
      }
 
      let executionKey;
+
+     if(xrayBody.tests.length === 0) {
+          console.log('No tests were found to upload');
+          process.exit();
+     }
+
      if(xrayBody.tests.length > 50) {
           const worker = new Worker();
           let testsArray = await worker.splitArray(xrayBody.tests, 50);
@@ -140,6 +137,7 @@ async function uploadExecution(options) {
           let response = await restXrayClient.sendResultsAsXrayJson(xrayBody)
           executionKey = response.data.key;
      }
+
 
      if(options.issueKey) {
           if(options.jiraBasicToken == undefined) {

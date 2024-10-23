@@ -1,6 +1,4 @@
-// const fs = require("fs");
 import fs from 'fs';
-// const convert = require("xml-js");
 import convert from "xml-js";
 
 export class JunitWorker {

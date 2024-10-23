@@ -1,10 +1,6 @@
-// const fs = require("fs");
 import fs from "fs";
-// const {AllureWorker} = require("./allure_worker.js");
 import {AllureWorker} from './allure_worker.js';
-// const {JunitWorker} = require("./junit_worker.js");
 import {JunitWorker} from './junit_worker.js';
-
 
 export class XrayWorker {
     async generateXrayJsonFromCucumberJsonResults(options) {
@@ -196,6 +192,7 @@ export class XrayWorker {
             let actualSteps = [];
             let labels = [];
             let evidence = [];
+            let defects = [];
 
             for(const rawEvidence of rawTest.attachments) {
                 let data = fs.readFileSync(`${options.filePath}/${rawEvidence.source}`).toString('base64');
@@ -228,12 +225,14 @@ export class XrayWorker {
 
             rawTest.labels.forEach( label => {
                 if(label.name === 'tag') { labels.push(label.value)}
+
+                if(label.name === 'story') { defects.push(label.value)}
             });
 
             let testName = (rawTest.name === rawTest.fullName) ? rawTest.historyId : rawTest.fullName;
             let status = (rawTest.status === "passed") ? 'PASSED' : 'FAILED';
 
-            let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined, undefined, evidence);
+            let test = this.createXrayTest(options, testName, expectedSteps, labels, status, actualSteps, undefined, undefined, undefined,undefined, defects, evidence);
 
             testCases.push(test);
         });

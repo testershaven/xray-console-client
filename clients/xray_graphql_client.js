@@ -1,6 +1,4 @@
-// const axios = require('axios');
 import axios from "axios";
-// const {ClientError} = require("../errors/client_error");
 import {ClientError} from "../errors/client_error.js";
 let instance;
 
